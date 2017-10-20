@@ -1,4 +1,4 @@
-package slashgordon
+package rolighund
 
 import (
 	"fmt"

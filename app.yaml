@@ -2,5 +2,7 @@ runtime: go
 api_version: go1
 
 handlers:
-- url: /.*
+- url: /doge
+  script: _go_app
+- url: /goodboy
   script: _go_app
