@@ -29,9 +29,10 @@ type Request struct {
 var decoder = schema.NewDecoder()
 
 type Response struct {
-	ResponseType	string `json:"response_type,omitifempty"`
+	ResponseType	string `json:"response_type,omitempty"`
 	Text			string `json:"text"`
 	Attachments		[]Attachment `json:"attachments,omitempty"`
+	ReplaceOriginal	bool `json:"replace_original`
 }
 
 type Attachment struct {
@@ -165,6 +166,7 @@ func GoodBoyHandler(w http.ResponseWriter, r *http.Request) {
 		response := Response{
 			ResponseType: "in_channel",
 			Text: msg,
+			ReplaceOriginal: false,
 		}
 
 		json, err := json.Marshal(response)
