@@ -32,7 +32,7 @@ type Response struct {
 	ResponseType	string `json:"response_type,omitempty"`
 	Text			string `json:"text"`
 	Attachments		[]Attachment `json:"attachments,omitempty"`
-	ReplaceOriginal	bool `json:"replace_original`
+	ReplaceOriginal	bool `json:"replace_original"`
 }
 
 type Attachment struct {
@@ -88,7 +88,6 @@ func DogeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Verify Token
-		// Check if it's an action
 
 		response := Response{
 			ResponseType: "in_channel",
@@ -157,12 +156,20 @@ func GoodBoyHandler(w http.ResponseWriter, r *http.Request) {
 		var msg string
 		if p.CallbackID == "good-boy-callback" {
 			// Make this better
-			if p.Actions[0].Value == "true" {
-				msg = fmt.Sprintf("Woho, <@%s> tycker om mig! :heart_eyes:", p.User.ID)
-			} else {
-				msg = fmt.Sprintf("Vad har jag _någonsin_ gjort dig, <@%s>? :cry:", p.User.ID)
+			for i := 0; i < len(p.Actions); i++ {
+				if p.Actions[i].Name == "good_boy" {
+					switch p.Actions[i].Value {
+					case "true":
+						msg = fmt.Sprintf("Woho, <@%s> tycker om mig! :heart_eyes:", p.User.ID)
+					case "false":
+						msg = fmt.Sprintf("Vad har jag _någonsin_ gjort dig, <@%s>? :cry:", p.User.ID)
+					default:
+						msg = "Vad hände nu...?"
+					}
+				}
 			}
 		}
+
 		response := Response{
 			ResponseType: "in_channel",
 			Text: msg,
@@ -173,12 +180,11 @@ func GoodBoyHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			// Error 500
 		}
-
-		jsonBlob := bytes.NewBuffer([]byte(json))
+		buf := bytes.NewBuffer([]byte(json))
 
 		ctx := appengine.NewContext(r)
 		client := urlfetch.Client(ctx)
-		_, err = client.Post(p.ResponseURL, "application/json", jsonBlob)
+		_, err = client.Post(p.ResponseURL, "application/json", buf)
 		if err != nil {
 			// Error 500
 		}
