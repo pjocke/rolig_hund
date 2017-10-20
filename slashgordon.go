@@ -6,6 +6,8 @@ import (
 	"github.com/gorilla/schema"
 	"encoding/json"
 	"bytes"
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/urlfetch"
 )
 
 type Request struct {
@@ -152,18 +154,17 @@ func GoodBoyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var msg string
-		if p.CallbackID == "good_boy_callback" {
+		if p.CallbackID == "good-boy-callback" {
 			// Make this better
 			if p.Actions[0].Value == "true" {
 				msg = fmt.Sprintf("Woho, <@%s> tycker om mig! :heart_eyes:", p.User.ID)
 			} else {
-				msg = fmt.Sprintf("Vad har jag någonsin gjort dig, <@%s>? :cry:", p.User.ID)
+				msg = fmt.Sprintf("Vad har jag _någonsin_ gjort dig, <@%s>? :cry:", p.User.ID)
 			}
 		}
-
 		response := Response{
 			ResponseType: "in_channel",
-			Text: p.Actions[0].Value + " " + msg,
+			Text: msg,
 		}
 
 		json, err := json.Marshal(response)
@@ -172,7 +173,12 @@ func GoodBoyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		jsonBlob := bytes.NewBuffer([]byte(json))
-		resp, err := http.Post(p.ResponseURL, "application/json", jsonBlob)
-		fmt.Fprintf(w, "%+v %s", resp, err)
+
+		ctx := appengine.NewContext(r)
+		client := urlfetch.Client(ctx)
+		_, err = client.Post(p.ResponseURL, "application/json", jsonBlob)
+		if err != nil {
+			// Error 500
+		}
 	}
 }
